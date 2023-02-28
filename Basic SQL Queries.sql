@@ -259,3 +259,230 @@ inner join Products p on p.ProductID = od.ProductID
 inner join Categories cat on cat.CategoryID = p.CategoryID
 inner join Customers c on c.CustomerID = o.CustomerID
 group by  c.CompanyName, cat.CategoryName
+
+-- Selects ASCII code of the character 'C'
+
+Select ASCII('C')
+
+-- Selects CompanyName column and its ASCII equivalent for all rows in the Customers table
+
+select CompanyName, AsCII(CompanyName) from Customers
+
+-- Selects the length of the string '        Bilge Adam           '
+
+select LEN ('        Bilge Adam           ')
+
+-- Concatenates 'asd' and 'casd' with a space between them and returns the result
+
+select Concat ('asd','casd') qwe
+
+-- Concatenates 'asd', 'bilgeadam', and 'com' with a period between them and returns the result
+
+Select CONCAT_WS('.','asd','bilgeadam','com')
+
+-- Concatenates TitleOfCourtesy, FirstName, and LastName columns with a space between them for all rows in the Employees table where TitleOfCourtesy is 'Dr.' or 'Mr.'
+
+Select CONCAT_WS(' ',FullName.TitleOfCourtesy,FullName.FirstName,FullName.LastName) from Employees FullName
+where FullName.TitleOfCourtesy in ('Dr.','Mr.')
+
+-- Concatenates information about an order including order ID, employee ID, employee name, customer ID, and company name
+
+select Concat (o.OrderID,' nolu sipariþ ',e.EmployeeID, ' kodlu ',e.FirstName,' ',e.LastName,' isimli çalýþan tarafýndan ',c.CustomerID, ' numaralý ', c.CompanyName,' isimli müþteriye yapýlmýþtýr')
+from orders o
+inner join employees e on e.EmployeeID = o.EmployeeID
+inner join Customers c on c.CustomerID = o.CustomerID
+
+-- Extracts the first 3 characters from the string 'Bilge adam'
+
+select LEFT('Bilge adam',3) ExtractString
+
+
+-- Extracts the last 5 characters from the string 'Bilge adam'
+
+select RIGHT('Bilge adam',5) ExtractString
+
+-- Converts the string 'Bilge Adam' to lowercase
+
+select Lower('Bilge Adam')
+
+-- Converts the string 'Bilge Adam' to uppercase
+
+select Upper('Bilge Adam')
+
+-- Returns the length of the string 'Bilge Adam' with leading spaces removed
+
+select len(ltrim('       Bilge Adam        '))
+
+-- Returns the length of the string 'Bilge Adam' with trailing spaces removed
+
+select len(rtrim('       Bilge Adam        '))
+
+-- Returns the length of the string 'Bilge Adam' with leading and trailing spaces removed
+
+select len(trim('       Bilge Adam        '))
+
+-- Reverses the string 'Bilge Adam' (including leading and trailing spaces)
+
+select reverse('       Bilge Adam        ')
+
+-- Extracts a substring of length 3 starting from the first character of the string 'Bilge Adam'
+
+select substring('Bilge Adam',1,3)
+
+-- Returns the current date and time
+
+Select GetDate()
+
+-- Adds one year to the date '2022/05/18' and returns the result
+
+Select DATEADD(year,1,'2022/05/18')  Tarih
+
+-- Adds one month to the date '2022/05/18' and returns the result
+
+Select DATEADD(month,1,'2022/05/18')  Tarih
+
+-- Adds one day to the date '2022/05/18' and returns the result
+
+Select DATEADD(day,1,'2022/05/18')  Tarih
+
+-- Adds one hour to the date '2022/05/18' and returns the result
+
+Select DATEADD(hour,1,'2022/05/18')  Tarih
+
+-- Adds one minute to the date '2022/05/18' and returns the result
+
+Select DATEADD(minute,1,'2022/05/18')  Tarih
+
+-- This query adds 1 minute to the specified date.
+
+Select DATEADD(second,1,'2022/05/18')  Tarih
+
+-- This query calculates the difference between two dates in years.
+
+select datediff(year,'2020/05/18','2022/05/18') Fark
+
+-- This query gets the day of the month for the current date.
+
+select day(getdate())
+
+-- This query gets the month for the current date.
+
+select month(getdate())
+
+-- This query gets the year for the current date.
+
+select year(getdate())
+
+-- This query gets the name of the month for the current date.
+
+select datename(month,getdate()) hangiAy
+
+-- This query gets the name of the day for the current date.
+
+select datename(day,getdate()) hangigun
+
+-- This query gets the name of the weekday for the current date.
+
+select datename(weekday,getdate()) hangigun
+
+-- This query returns the current UTC date and time.
+
+select SYSUTCDATETIME()
+
+-- This query returns the current local date and time.
+
+select getdate()
+
+-- This query converts the current UTC date and time to Turkey Standard Time.
+
+select SYSUTCDATETIME() AT TIME ZONE 'UTC' AT TIME ZONE 'Turkey Standard Time'
+
+-- This query gets the average unit price for each order.
+
+select od.OrderID, avg (p.UnitPrice)
+from [Order Details] od
+inner join Products p On od.ProductID = p.ProductID
+group by od.OrderID
+
+-- This query counts the number of products with more than 50 units in stock.
+
+select Count (*)
+from Products p
+where p.UnitsInStock  > 50
+
+-- This query gets the maximum unit price for all products.
+
+select max(p.UnitPrice)
+from products p
+
+-- This query gets the minimum unit price for all products.
+
+select min(p.UnitPrice)
+from products p
+
+-- This query gets the product with the highest unit price.
+
+select top 1 p.UnitPrice, p.ProductName
+from products p
+order by p.UnitPrice desc
+
+-- This query gets the products with the same maximum unit price.
+
+select p.ProductName,p.UnitPrice
+from products p
+where p.UnitPrice = (select max(p1.UnitPrice) from products p1)
+order by p.UnitPrice desc
+
+-- This query selects all columns from the Products table.
+
+select * from products
+
+-- This query gets the products with the same unit price as a specific product.
+
+select p.ProductName,p.UnitPrice
+from products p
+where p.ProductName in (select p1.ProductName from products p1 where p1.UnitPrice = 43.90)
+order by p.UnitPrice desc
+
+-- This query gets the total quantity sold for each product.
+
+select p.ProductName, sum(od.Quantity)
+from Products p
+inner join [Order Details] od on od.ProductID = p.ProductID
+group by p.ProductName
+order by sum(od.Quantity) desc
+
+-- This query gets the top 5 products with the highest quantity sold.
+
+select top 5 od.ProductID, p.ProductName, Sum(od.Quantity) Adet
+from [Order Details] od
+inner join Products p on p.ProductID = od.ProductID
+group by od.ProductID,ProductName
+order by 3 desc
+
+-- This query gets the total revenue for each customer whose company name starts with 'E' and has a revenue greater than $50,000.
+
+select c.CompanyName, sum(od.Quantity*od.UnitPrice) ToplamCiro
+from customers c
+inner join orders o on o.CustomerID = c.CustomerID
+join [Order Details] od on od.OrderID = o.OrderID
+where c.CompanyName like 'E%'
+group by c.CompanyName
+Having sum(od.Quantity*od.UnitPrice) > 50000
+
+-- This query returns the CompanyName column from the Customers table for all customers who do not have any orders in the Orders table.
+-- It uses a full outer join between the Orders and Customers table on the CustomerID column, and then filters out the rows where OrderID is null (i.e. customers who do not have any orders).
+-- The full outer join is used because we want to include customers who do not have any orders in the result set.
+
+select c.CompanyName
+from orders o
+full outer join customers c on c.CustomerID = o.CustomerID
+where o.OrderID is null
+
+-- This query returns the CompanyName column from the Customers table for all customers who do not have any orders in the Orders table.
+-- It uses a subquery to get the distinct CustomerID values from the Orders table and then uses a NOT IN clause to exclude the customers with those CustomerID values.
+-- The subquery is used to get the distinct CustomerID values from the Orders table. The NOT IN clause is used to exclude the customers with those CustomerID values from the result set.
+
+select c.companyName
+from Customers c
+where c.CustomerID not in (select distinct CustomerID from orders)

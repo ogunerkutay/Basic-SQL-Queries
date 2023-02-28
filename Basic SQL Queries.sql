@@ -486,3 +486,166 @@ where o.OrderID is null
 select c.companyName
 from Customers c
 where c.CustomerID not in (select distinct CustomerID from orders)
+
+--This query retrieves the maximum and minimum discount values for each product category. The results are returned in a table with the category ID, category name, maximum discount, and minimum discount columns.
+
+Select Cat.CategoryID,Cat.CategoryName,MAXDiscount.MAXDiscount,MINDiscount.MINDiscount
+From Categories Cat inner join
+(
+Select CAT.CategoryID, max(od.Discount) MAXDiscount
+from Categories CAT inner join Products P On Cat.CategoryID = p.CategoryID
+inner join [Order Details] od on p.ProductID = od.ProductID
+group by CAT.CategoryID
+) MAXDiscount on Cat.CategoryID = MAXDiscount.CategoryID
+inner join 
+(
+Select CAT.CategoryID, min(od.Discount) MINDiscount
+from Categories CAT inner join Products P On Cat.CategoryID = p.CategoryID
+inner join [Order Details] od on p.ProductID = od.ProductID
+group by CAT.CategoryID
+) MINDiscount on Cat.CategoryID = MINDiscount.CategoryID
+
+--This query retrieves the first name, address, city, and postal code of all employees and customers in a single table. The 'Type' column specifies whether each row is an employee or a customer.
+
+select 'Employee' 'Type',E.FirstName,e.Address,e.City,e.PostalCode
+from Employees E
+union
+select 'Customer' 'Type',c.CompanyName,c.Address,c.City,c.PostalCode
+from Customers C
+
+--This query retrieves the order ID, order date, customer ID, and employee ID for the latest order placed by each customer.
+
+SELECT * FROM Orders O INNER JOIN
+(
+SELECT O.CustomerID,MAX(O.OrderDate) MAXORDERDATE
+FROM ORDERS O
+GROUP BY O.CustomerID) MAXORDERDATE ON
+O.CustomerID = MAXORDERDATE.CustomerID AND O.OrderDate = MAXORDERDATE.MAXORDERDATE
+
+--This query retrieves all customers who placed an order between January 1, 1996, and July 5, 1996.
+
+SELECT *
+FROM CUSTOMERS
+WHERE CUSTOMERID IN (SELECT distinct CUSTOMERID FROM ORDERS WHERE ORDERDATE between '1996-01-01' and '1996-07-05')
+
+-- This query retrieves the total quantity of a specific product (with ProductID=23) ordered by each customer,
+-- then filters out the customers whose total quantity is less than or equal to 20,
+-- and finally sorts the remaining customers in descending order based on their total quantity.
+
+select c.CompanyName, sum(od.Quantity) Adet
+from customers c
+inner join Orders o on o.CustomerID = c.CustomerID
+inner join [Order Details] od on od.OrderID = o.OrderID
+where od.ProductID = 23
+group by c.CompanyName
+having sum(od.Quantity) > 20
+order by Adet desc
+
+--This query retrieves the total amount of money for each order by multiplying the Quantity, UnitPrice, and Discount of each product in an order and summing them up. The results are grouped by OrderID.
+
+Select od.OrderID,sum((od.Quantity*od.UnitPrice) * (1-od.Discount))
+From [Order Details] od
+group by Od.OrderID
+
+--This query joins Customers, Orders, and a subquery of [Order Details] table. The subquery retrieves the total amount of money for each order, and the main query retrieves the CustomerID, CompanyName, and OrderID of each order along with the total amount of money for that order. The results are obtained by joining the Customers and Orders tables using CustomerID as a join key and then joining the subquery results with the Orders table using OrderID as a join key.
+
+SeleCt C.CustomerID,C.CompanyName,o.OrderID,OT.OrderTotal
+From Customers C inner join Orders O On C.CustomerID = O.CustomerID
+inner join
+(
+Select od.OrderID,sum((od.Quantity*od.UnitPrice) * (1-od.Discount)) OrderTotal
+From [Order Details] od
+group by Od.OrderID
+) OT on o.OrderID = OT.OrderID
+
+--This code creates a view named View_CustomerOrderDetails that retrieves the same results as the previous query. The view can be used to simplify future queries that need to retrieve customer order details. The view is then queried and the results are ordered by CustomerID.
+
+create view View_CustomerOrderDetails as 
+Select C.CustomerID,C.CompanyName,o.OrderID,OT.OrderTotal
+From Customers C inner join Orders O On C.CustomerID = O.CustomerID
+inner join
+(
+Select od.OrderID,sum((od.Quantity*od.UnitPrice) * (1-od.Discount)) OrderTotal
+From [Order Details] od
+group by Od.OrderID
+) OT on o.OrderID = OT.OrderID
+
+select * from [dbo].[View_CustomerOrderDetails]
+order by CustomerID
+
+--This code alters the previously created View_CustomerOrderDetails view by adding ContactName and ContactTitle columns from the Customers table.
+
+ALTER view View_CustomerOrderDetails as 
+Select C.CustomerID,C.CompanyName,C.ContactName,C.ContactTitle,o.OrderID,OT.OrderTotal
+From Customers C inner join Orders O On C.CustomerID = O.CustomerID
+inner join
+(
+Select od.OrderID,sum((od.Quantity*od.UnitPrice) * (1-od.Discount)) OrderTotal
+From [Order Details] od
+group by Od.OrderID
+) OT on o.OrderID = OT.OrderID
+
+--This query retrieves information about views in the database schema, including their names, owners, and creation dates.
+
+select * from INFORMATION_SCHEMA.VIEWS
+
+-- creates a view named View_OrderProductCount that counts the number of products for each order:
+
+create view View_OrderProductCount
+As
+Select o.OrderID, COUNT(OD.ProductID) ProductCount
+From Orders O inner join [Order Details] OD on O.OrderID = OD.OrderID
+group by o.OrderID
+
+Select * From [dbo].[View_OrderProductCount]
+
+-- alters the previously created view, adding WITH ENCRYPTION to encrypt the view definition
+
+Alter View View_OrderProductCount
+--with Encryption
+as
+Select o.OrderID, COUNT(OD.ProductID) ProductCount
+From Orders O inner join [Order Details] OD on O.OrderID = OD.OrderID
+group by o.OrderID
+
+-- creates a view named View_ProductTotalCount that calculates the total count of products for each order
+--The WITH SCHEMABINDING option binds the view to the schema of the underlying tables, ensuring that the schema cannot be modified without dropping the view
+
+ALTER View View_ProductTotalCount
+with SchemaBinding
+as
+Select o.OrderID, COUNT_BIG(*) [Count],sum(od.Quantity) [ProductTotalCount]
+From dbo.Orders O inner join dbo.[Order Details] OD On O.OrderID = Od.OrderID
+group by o.OrderID
+
+--The fourth statement creates a unique clustered index on the OrderId column of the View_ProductTotalCount view:
+Create unique clustered index View_ProductTotalCount_OrderID On [dbo].[View_ProductTotalCount](OrderID)
+
+--selects all rows from the View_ProductTotalCount view where the OrderId column equals 10248:
+
+select * from [dbo].[View_ProductTotalCount]
+where OrderId = '10248'
+
+--drops the View_ProductTotalCount view
+
+drop view [dbo].[View_ProductTotalCount]
+
+--creates a view named View_RegionExtend that concatenates the RegionID and RegionDescription columns and adds them to a new column named ExtendedRegionInfo:
+
+Create View View_RegionExtend
+as
+select RegionID,RegionDescription,
+cast(RegionID as varchar(10))
+ + ' - ' + RegionDescription ExtendedRegionInfo
+ from dbo.Region
+
+ --alters the RegionDescription column of the Region table to have a data type of varchar(max)
+
+ Alter table Region
+ alter Column RegionDescription varchar(max)
+
+ --drops the View_RegionExtend view
+
+ drop view View_RegionExtend
+
+
